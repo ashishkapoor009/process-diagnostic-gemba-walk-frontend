@@ -2,6 +2,7 @@ import { api } from "@/lib/api";
 import { Card, MetricTile, SectionHeading } from "@/components/ui";
 import { RecommendationsTable } from "@/components/RecommendationsTable";
 import { ReportDownloads } from "@/components/ReportDownloads";
+import { MermaidDiagram } from "@/components/MermaidDiagram";
 
 export const dynamic = "force-dynamic";
 
@@ -45,6 +46,18 @@ export default async function ProcessDetailPage({ params }: { params: Promise<{ 
           {detail.executive_summary || "Not yet generated."}
         </div>
       </Card>
+
+      <div>
+        <SectionHeading title="Process Flow" subtitle="Current-state (swimlane) vs. future-state (post-improvement) flow." />
+        <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+          <Card>
+            <MermaidDiagram chart={detail.flow_mermaid_current} title="📍 Current State" />
+          </Card>
+          <Card>
+            <MermaidDiagram chart={detail.flow_mermaid_future} title="🚀 Future State" />
+          </Card>
+        </div>
+      </div>
 
       <div>
         <SectionHeading title="Current-State Process Diagnostics" />
