@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { api, ApiError } from "@/lib/api";
-import type { ProcessMetadata, ProcessStepInput } from "@/lib/types";
+import type { ProcessMetadata, ProcessStepInput, UploadExtractionResult } from "@/lib/types";
 import { Card, PrimaryButton, SectionHeading } from "@/components/ui";
 
 const EMPTY_METADATA: ProcessMetadata = {
@@ -35,6 +35,7 @@ export default function NewDiagnosticPage() {
   const [extracting, setExtracting] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [uploadResult, setUploadResult] = useState<UploadExtractionResult | null>(null);
 
   function updateField<K extends keyof ProcessMetadata>(key: K, value: ProcessMetadata[K]) {
     setMetadata((m) => ({ ...m, [key]: value }));
@@ -42,6 +43,7 @@ export default function NewDiagnosticPage() {
 
   async function handleExtract() {
     setError(null);
+    setUploadResult(null);
     setExtracting(true);
     try {
       const extracted = await api.extractFromText(stepsText, metadata.process_name);
@@ -55,12 +57,19 @@ export default function NewDiagnosticPage() {
 
   async function handleUpload(file: File) {
     setError(null);
+    setUploadResult(null);
     setExtracting(true);
     try {
-      const result = await api.extractFromUpload(file);
+      // The same free-form text box used for manual step entry can also
+      // carry an optional instruction for file uploads, e.g. "Extract sheet
+      // 3 of the attached file" - the backend only honors it for multi-sheet
+      // Excel/CSV uploads, and ignores it entirely otherwise.
+      const result = await api.extractFromUpload(file, stepsText);
+      setUploadResult(result);
       setSteps(result.steps);
     } catch (err) {
-      setError(err instanceof ApiError ? err.message : "Upload extraction failed.");
+      const message = err instanceof ApiError ? err.message : "Upload extraction failed.";
+      setError(`"${file.name}": ${message}`);
     } finally {
       setExtracting(false);
     }
@@ -173,6 +182,11 @@ export default function NewDiagnosticPage() {
           value={stepsText}
           onChange={(e) => setStepsText(e.target.value)}
         />
+        <p className="mt-1 text-xs text-muted">
+          Uploading a multi-sheet Excel/CSV file? You can optionally type which sheet to use above
+          (e.g. &quot;use the Process Steps sheet&quot; or &quot;sheet 3&quot;) before clicking Upload -
+          otherwise every non-empty sheet is used.
+        </p>
         <div className="mt-3 flex flex-wrap items-center gap-3">
           <PrimaryButton onClick={handleExtract} disabled={extracting || !stepsText.trim()}>
             {extracting ? "Extracting..." : "🤖 Extract Steps with AI"}
@@ -186,8 +200,28 @@ export default function NewDiagnosticPage() {
               onChange={(e) => e.target.files?.[0] && handleUpload(e.target.files[0])}
             />
           </label>
-          {steps.length > 0 && <span className="text-sm text-muted">{steps.length} step(s) extracted.</span>}
+          {extracting && <span className="text-sm text-muted">Extracting...</span>}
+          {!extracting && steps.length > 0 && <span className="text-sm text-muted">{steps.length} step(s) extracted.</span>}
         </div>
+
+        {uploadResult && (
+          <div className="mt-4 rounded-lg border border-border bg-surface p-3 text-sm">
+            <p className="font-semibold">
+              📎 {uploadResult.filename}
+              {uploadResult.file_type && <span className="ml-2 font-normal text-muted">({uploadResult.file_type}{uploadResult.used_ocr ? ", OCR" : ""})</span>}
+            </p>
+            {uploadResult.sources.length > 0 && (
+              <ul className="mt-2 list-inside list-disc space-y-0.5 text-muted">
+                {uploadResult.sources.map((s, i) => (
+                  <li key={i}>{s}</li>
+                ))}
+              </ul>
+            )}
+            {uploadResult.warning && (
+              <p className="mt-2 text-amber-700">⚠️ {uploadResult.warning}</p>
+            )}
+          </div>
+        )}
 
         {steps.length > 0 && (
           <div className="mt-4 overflow-x-auto">

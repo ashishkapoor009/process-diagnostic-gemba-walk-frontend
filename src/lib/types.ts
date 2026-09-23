@@ -178,6 +178,15 @@ export interface ProcessDetail {
   deep_eval_findings: DeepEvalFinding[];
 }
 
+export interface UploadExtractionResult {
+  filename: string;
+  file_type: string;
+  used_ocr: boolean;
+  sources: string[];
+  steps: ProcessStepInput[];
+  warning?: string | null;
+}
+
 export interface JobStartResponse {
   job_id: string;
   status: "queued";
