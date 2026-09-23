@@ -38,7 +38,7 @@ export default async function DashboardPage() {
         />
         <MetricTile
           label="Total Volume/Period"
-          value={processes.reduce((sum, p) => sum + p.current_volume, 0).toLocaleString()}
+          value={processes.reduce((sum, p) => sum + p.current_volume, 0).toLocaleString("en-US")}
         />
         <MetricTile label="Avg. AHT (min)" value={
           processes.length

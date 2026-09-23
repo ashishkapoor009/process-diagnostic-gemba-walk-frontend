@@ -86,6 +86,7 @@ export interface Recommendation {
   sub_category?: string | null;
   title: string;
   description: string;
+  problem_statement: string;
   rationale: string;
   proposed_by_agent: string;
   roadmap_horizon: string;
@@ -117,6 +118,41 @@ export interface SavingsSummary {
   recommendations_by_category: Record<string, number>;
 }
 
+export interface EvaluationScore {
+  round_number: number;
+  faithfulness: number;
+  answer_relevancy: number;
+  context_precision: number;
+  context_recall: number;
+  context_relevancy: number;
+  overall_score: number;
+  passed_threshold: boolean;
+}
+
+export interface DeepEvalFinding {
+  severity: "error" | "warning" | string;
+  recommendation_title: string;
+  issue: string;
+  round_number: number;
+}
+
+export interface KpiRow {
+  kpi: string;
+  unit: string;
+  current: number;
+  benchmark: number;
+  projected: number | null;
+  status: "Above Benchmark" | "Near Benchmark" | "Below Benchmark" | "N/A" | string;
+  note?: string;
+}
+
+export interface KpiSummary {
+  benchmark_category: string;
+  kpis: KpiRow[];
+  maturity_score: number;
+  benchmark_source_note: string;
+}
+
 export interface ProcessSummary {
   id: number;
   process_name: string;
@@ -131,11 +167,15 @@ export interface ProcessSummary {
 export interface ProcessDetail {
   metadata: ProcessMetadata;
   diagnostics: ProcessStepDiagnostic[];
+  future_diagnostics: ProcessStepDiagnostic[];
   recommendations: Recommendation[];
   savings_summary: SavingsSummary;
+  kpi_summary: KpiSummary;
   executive_summary: string;
   flow_mermaid_current: string;
   flow_mermaid_future: string;
+  evaluation_scores: EvaluationScore[];
+  deep_eval_findings: DeepEvalFinding[];
 }
 
 export interface JobStartResponse {

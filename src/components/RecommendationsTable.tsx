@@ -59,48 +59,62 @@ export function RecommendationsTable({ recommendations }: { recommendations: Rec
           <Card key={s.cat}>
             <div className="text-sm font-semibold">{s.cat}</div>
             <div className="text-xs text-muted">{s.count} recommendation(s)</div>
-            <div className="text-xs text-muted">${s.annual.toLocaleString()}/yr</div>
+            <div className="text-xs text-muted">${s.annual.toLocaleString("en-US")}/yr</div>
           </Card>
         ))}
       </div>
 
-      <div className="space-y-3">
-        {rows.map((r, i) => (
-          <Card key={i}>
-            <div className="mb-1 flex flex-wrap items-center justify-between gap-2">
-              <span className="font-semibold">{r.title}</span>
-              <Badge color="purple">{r.proposed_by_agent}</Badge>
-            </div>
-            <div className="mb-2">
-              <Badge color="blue">{mainCategoryFor(r.category)}</Badge>
-              <Badge color="amber">{r.category}</Badge>
-              <Badge color="green">{r.roadmap_horizon}</Badge>
-              {r.is_duplicate && <Badge color="red">Possible Duplicate</Badge>}
-            </div>
-            <p className="text-sm text-foreground/90">{r.description}</p>
-            {r.rationale && <p className="mt-1 text-xs text-muted">Rationale: {r.rationale}</p>}
-            <div className="mt-3 grid grid-cols-2 gap-2 text-sm sm:grid-cols-5">
-              <Metric label="Impact" value={`${r.prioritization.business_impact}/10`} />
-              <Metric label="Effort" value={`${r.prioritization.implementation_effort}/10`} />
-              <Metric label="ROI" value={`${r.prioritization.roi}/10`} />
-              <Metric label="Confidence" value={`${Math.round(r.confidence_score * 100)}%`} />
-              <Metric label="Annual Savings" value={`$${r.savings.annual_cost_savings.toLocaleString()}`} />
-            </div>
-            <div className="mt-2 text-xs text-muted">
-              Step: {r.step_number ?? "Process-level"} | Complexity: {r.complexity} | Risk: {r.risk_level} | Source: {r.source_type}
-            </div>
-          </Card>
-        ))}
+      <div className="overflow-x-auto rounded-xl border border-border">
+        <table className="w-full text-sm">
+          <thead className="bg-surface">
+            <tr className="text-left">
+              <Th>Title</Th>
+              <Th>Category</Th>
+              <Th>Horizon</Th>
+              <Th>Step</Th>
+              <Th>Agent</Th>
+              <Th>Impact</Th>
+              <Th>Effort</Th>
+              <Th>ROI</Th>
+              <Th>Confidence</Th>
+              <Th>Annual Savings</Th>
+              <Th>Flags</Th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((r, i) => (
+              <tr key={i} className="border-t border-border align-top">
+                <Td className="min-w-[220px]">
+                  <div className="font-medium">{r.title}</div>
+                  <div className="mt-0.5 line-clamp-2 text-xs text-muted" title={r.description}>
+                    {r.description}
+                  </div>
+                </Td>
+                <Td className="min-w-[150px]">
+                  <Badge color="blue">{mainCategoryFor(r.category)}</Badge>
+                  <Badge color="amber">{r.category}</Badge>
+                </Td>
+                <Td className="whitespace-nowrap">{r.roadmap_horizon}</Td>
+                <Td>{r.step_number ?? "Process-level"}</Td>
+                <Td className="whitespace-nowrap">{r.proposed_by_agent}</Td>
+                <Td>{r.prioritization.business_impact}/10</Td>
+                <Td>{r.prioritization.implementation_effort}/10</Td>
+                <Td>{r.prioritization.roi}/10</Td>
+                <Td>{Math.round(r.confidence_score * 100)}%</Td>
+                <Td className="whitespace-nowrap">${r.savings.annual_cost_savings.toLocaleString("en-US")}</Td>
+                <Td>{r.is_duplicate && <Badge color="red">Possible Duplicate</Badge>}</Td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
       </div>
     </div>
   );
 }
 
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div>
-      <div className="text-xs uppercase text-muted">{label}</div>
-      <div className="font-semibold">{value}</div>
-    </div>
-  );
+function Th({ children }: { children: React.ReactNode }) {
+  return <th className="whitespace-nowrap px-3 py-2 font-semibold text-muted">{children}</th>;
+}
+function Td({ children, className = "" }: { children: React.ReactNode; className?: string }) {
+  return <td className={`px-3 py-2 ${className}`}>{children}</td>;
 }

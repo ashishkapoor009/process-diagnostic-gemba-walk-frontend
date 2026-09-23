@@ -1,8 +1,12 @@
 import { api } from "@/lib/api";
 import { Card, MetricTile, SectionHeading } from "@/components/ui";
 import { RecommendationsTable } from "@/components/RecommendationsTable";
+import { RecommendationsByStepTable } from "@/components/RecommendationsByStepTable";
+import { EvaluationResultsTables } from "@/components/EvaluationResultsTables";
+import { KpiBenchmarkSection } from "@/components/KpiBenchmarkSection";
 import { ReportDownloads } from "@/components/ReportDownloads";
 import { MermaidDiagram } from "@/components/MermaidDiagram";
+import { EditableDiagnosticsTable } from "@/components/EditableDiagnosticsTable";
 
 export const dynamic = "force-dynamic";
 
@@ -30,12 +34,12 @@ export default async function ProcessDetailPage({ params }: { params: Promise<{ 
       <div className="grid grid-cols-2 gap-3 sm:grid-cols-5">
         <MetricTile label="Recommendations" value={String(s.total_recommendations)} />
         <MetricTile label="Est. FTE Savings" value={String(s.total_fte_savings)} />
-        <MetricTile label="In-Year Savings" value={`$${s.in_year_savings.toLocaleString()}`} />
-        <MetricTile label="12-Month Savings" value={`$${s.twelve_month_savings.toLocaleString()}`} />
+        <MetricTile label="In-Year Savings" value={`$${s.in_year_savings.toLocaleString("en-US")}`} />
+        <MetricTile label="12-Month Savings" value={`$${s.twelve_month_savings.toLocaleString("en-US")}`} />
         <MetricTile label="Efficiency Improvement" value={`${s.blended_efficiency_improvement_pct}%`} />
       </div>
       <p className="text-xs text-muted">
-        In-Year Savings = monthly FTE cost (${s.annual_fte_cost.toLocaleString()}/yr &divide; 12) &times;{" "}
+        In-Year Savings = monthly FTE cost (${s.annual_fte_cost.toLocaleString("en-US")}/yr &divide; 12) &times;{" "}
         {s.months_remaining_in_year} months remaining this year &times; {s.total_fte_savings} FTEs released.
         12-Month Savings = annual FTE cost &times; FTEs released (full run-rate).
       </p>
@@ -61,36 +65,7 @@ export default async function ProcessDetailPage({ params }: { params: Promise<{ 
 
       <div>
         <SectionHeading title="Current-State Process Diagnostics" />
-        <div className="overflow-x-auto rounded-xl border border-border">
-          <table className="w-full text-sm">
-            <thead className="bg-surface">
-              <tr className="text-left">
-                <Th>Step</Th>
-                <Th>Name</Th>
-                <Th>Owner</Th>
-                <Th>Value Class</Th>
-                <Th>Cycle (m)</Th>
-                <Th>Wastes</Th>
-                <Th>Automation</Th>
-                <Th>AI Readiness</Th>
-              </tr>
-            </thead>
-            <tbody>
-              {detail.diagnostics.map((d) => (
-                <tr key={d.step_number} className="border-t border-border">
-                  <Td>{d.step_number}</Td>
-                  <Td>{d.step_name}</Td>
-                  <Td>{d.owner}</Td>
-                  <Td>{d.value_classification}</Td>
-                  <Td>{d.cycle_time_minutes}</Td>
-                  <Td>{d.lean_wastes.join(", ") || "None"}</Td>
-                  <Td>{d.automation_score}</Td>
-                  <Td>{d.ai_readiness_score}</Td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
+        <EditableDiagnosticsTable processId={processId} diagnostics={detail.diagnostics} />
       </div>
 
       <div>
@@ -102,16 +77,33 @@ export default async function ProcessDetailPage({ params }: { params: Promise<{ 
       </div>
 
       <div>
+        <SectionHeading
+          title="Recommendations by Process Step"
+          subtitle="Every recommendation mapped to the specific step it applies to, with the problem statement it resolves."
+        />
+        <RecommendationsByStepTable diagnostics={detail.diagnostics} recommendations={detail.recommendations} />
+      </div>
+
+      <div>
+        <SectionHeading
+          title="KPI Benchmarking"
+          subtitle="Current-state KPIs vs. the golden benchmark dataset, and where recommendations should land you."
+        />
+        <KpiBenchmarkSection kpi={detail.kpi_summary} />
+      </div>
+
+      <div>
+        <SectionHeading
+          title="Evaluation Results"
+          subtitle="RAGAS quality scores and deep evaluation (grounding + numeric sanity) findings, by review round."
+        />
+        <EvaluationResultsTables evaluationScores={detail.evaluation_scores} deepEvalFindings={detail.deep_eval_findings} />
+      </div>
+
+      <div>
         <SectionHeading title="Download Deliverables" />
         <ReportDownloads processId={processId} />
       </div>
     </div>
   );
-}
-
-function Th({ children }: { children: React.ReactNode }) {
-  return <th className="px-3 py-2 font-semibold text-muted">{children}</th>;
-}
-function Td({ children }: { children: React.ReactNode }) {
-  return <td className="px-3 py-2">{children}</td>;
 }
