@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { api, API_URL } from "@/lib/api";
 import { Card, MetricTile, PrimaryButton, SectionHeading } from "@/components/ui";
+import { DeleteProcessButton } from "@/components/DeleteProcessButton";
 
 export const dynamic = "force-dynamic";
 
@@ -63,12 +64,15 @@ export default async function DashboardPage() {
                     {p.team_name} | {p.lob} | FTE: {p.current_fte} | Volume: {p.current_volume} | AHT: {p.aht_minutes}m
                   </div>
                 </div>
-                <Link
-                  href={`/processes/${p.id}`}
-                  className="rounded-lg border border-brand-blue px-3 py-1.5 text-sm font-semibold text-brand-blue hover:bg-brand-blue-light"
-                >
-                  Open &rarr;
-                </Link>
+                <div className="flex items-center gap-2">
+                  <Link
+                    href={`/processes/${p.id}`}
+                    className="rounded-lg border border-brand-blue px-3 py-1.5 text-sm font-semibold text-brand-blue hover:bg-brand-blue-light"
+                  >
+                    Open &rarr;
+                  </Link>
+                  <DeleteProcessButton processId={p.id} processName={p.process_name} />
+                </div>
               </Card>
             ))}
           </div>

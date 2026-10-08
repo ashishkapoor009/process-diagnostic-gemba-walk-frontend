@@ -74,6 +74,9 @@ export const api = {
 
   getProcess: (id: number) => request<ProcessDetail>(`/api/processes/${id}`),
 
+  deleteProcess: (id: number) =>
+    request<{ deleted: boolean; process_id: number }>(`/api/processes/${id}`, { method: "DELETE" }),
+
   updateCurrentStateSteps: (id: number, diagnostics: ProcessStepDiagnostic[]) =>
     request<{
       diagnostics: ProcessStepDiagnostic[];
